@@ -6,7 +6,13 @@ import requests
 from bs4 import BeautifulSoup
 from groq import Groq
 
-client = Groq(api_key=os.environ.get("GROQ_API_KEY") or "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")
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+if not GROQ_API_KEY:
+    raise RuntimeError(
+        "GROQ_API_KEY environment variable is not set. "
+        "Add it as a secret in your Hugging Face Space settings (never hardcode API keys in source code)."
+    )
+client = Groq(api_key=GROQ_API_KEY)
 
 PAK_DB = """
 VERIFIED LEGIT PAKISTAN COMPANIES:
