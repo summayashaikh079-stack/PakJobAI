@@ -84,7 +84,7 @@ def analyze_text(job_text, language):
         "Mix": "Mix Roman Urdu and English."
     }
     response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+        model="openai/gpt-oss-120b",
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT + "\n" + lang_note.get(language, "")},
             {"role": "user", "content": f"Analyze:\n\n{job_text}"}
@@ -94,20 +94,13 @@ def analyze_text(job_text, language):
     return response.choices[0].message.content
 
 def analyze_image_with_groq(image_path):
-    with open(image_path, "rb") as f:
-        image_data = base64.b64encode(f.read()).decode("utf-8")
-    response = client.chat.completions.create(
-        model="meta-llama/llama-4-scout-17b-16e-instruct",
-        messages=[{
-            "role": "user",
-            "content": [
-                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_data}"}},
-                {"type": "text", "text": "Extract all text from this job posting image. Return ONLY the extracted text."}
-            ]
-        }],
-        max_tokens=1000
+    # NOTE: Groq currently has no vision-capable model available on the free tier.
+    # This is disabled gracefully rather than calling a model that doesn't exist.
+    return (
+        "Screenshot analysis is temporarily unavailable "
+        "(Groq doesn't currently offer a vision model on this plan). "
+        "Please paste the job posting text instead — it works the same way."
     )
-    return response.choices[0].message.content
 
 def process_input(job_url, job_text, image, language):
     final_text = ""
@@ -125,9 +118,7 @@ def process_input(job_url, job_text, image, language):
             else:
                 return "URL se data fetch nahi ho saka. Text manually paste karo!", 0, ""
         elif image is not None:
-            extracted = analyze_image_with_groq(image)
-            final_text = extracted
-            prefix_note = f"[Screenshot se extract kiya gaya]\n{extracted}\n\n"
+            return analyze_image_with_groq(image), 0, ""
         else:
             final_text = job_text
 
